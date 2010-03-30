@@ -1,4 +1,4 @@
-application: ctst
+application: webworthy
 version: 1
 runtime: python
 api_version: 1
@@ -16,6 +16,9 @@ handlers:
 
 - url: /media/admin
   static_dir: common-apps/django/contrib/admin/media
+
+- url: /css
+  static_dir: media
 
 - url: /.*
   script: common-apps/djangoappengine/main/main.py

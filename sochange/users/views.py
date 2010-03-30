@@ -1,7 +1,15 @@
 from django.shortcuts import render_to_response
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
+from django.core.urlresolvers import reverse
 
 def index(request):
-    #return HttpResponse("Hello, world. You're at the poll index.")
     return render_to_response('users/index.html', context_instance=RequestContext(request))
+
+def login(request):
+    return HttpResponseRedirect(reverse('logged_in'))
+
+def logged_in(request):
+    return HttpResponse("All Logged In!!")
+    
+
