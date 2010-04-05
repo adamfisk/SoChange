@@ -1,12 +1,13 @@
 import datetime
 import sys
 
-from django.conf import settings
 from django.db.models.sql import aggregates as sqlaggregates
 from django.db.models.sql.constants import LOOKUP_SEP, MULTI, SINGLE
 from django.db.models.sql.where import AND, OR
 from django.db.utils import DatabaseError, IntegrityError
 from django.utils.tree import Node
+
+from functools import wraps
 
 from google.appengine.api.datastore import Entity, Query, Put, Get, Delete, Key
 from google.appengine.api.datastore_errors import Error as GAEError
@@ -14,7 +15,8 @@ from google.appengine.api.datastore_types import Text, Category, Email, Link, \
     PhoneNumber, PostalAddress, Text, Blob, ByteString, GeoPt, IM, Key, \
     Rating, BlobKey
 
-from .basecompiler import NonrelCompiler
+from djangotoolbox.db.basecompiler import NonrelQuery, NonrelCompiler, \
+    NonrelInsertCompiler, NonrelDeleteCompiler
 
 # Valid query types (a dictionary is used for speedy lookups).
 OPERATORS_MAP = {
@@ -28,6 +30,7 @@ OPERATORS_MAP = {
     'isnull': None,
     'startswith': None,
     'range': None,
+    'year': None,
 
     # TODO: support these filters
     # in
@@ -42,91 +45,182 @@ NEGATION_MAP = {
     #'exact': '!=', # this might actually become individual '<' and '>' queries
 }
 
-class SQLCompiler(NonrelCompiler):
-    """
-    A simple App Engine query: no joins, no distinct, etc.
-    """
+def safe_call(func):
+    @wraps(func)
+    def _func(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except GAEError, e:
+            raise DatabaseError, DatabaseError(str(e)), sys.exc_info()[2]
+    return _func
 
+class GAEQuery(NonrelQuery):
     # ----------------------------------------------
     # Public API
     # ----------------------------------------------
-    def execute_sql(self, result_type=MULTI):
-        """
-        Handles aggregate/count queries
-        """
-        aggregates = self.query.aggregate_select.values()
-        # Simulate a count()
-        if aggregates:
-            assert len(aggregates) == 1
-            aggregate = aggregates[0]
-            assert isinstance(aggregate, sqlaggregates.Count)
-            meta = self.query.get_meta()
-            assert aggregate.col == '*' or aggregate.col == (meta.db_table, meta.pk.column)
-            try:
-                count = self.get_count()
-            except GAEError, e:
-                raise DatabaseError, DatabaseError(*tuple(e)), sys.exc_info()[2]
-            if result_type is SINGLE:
-                return [count]
-            elif result_type is MULTI:
-                return [[count]]
-        raise NotImplementedError('The App Engine backend only supports count() queries')
+    def __init__(self, compiler, fields):
+        super(GAEQuery, self).__init__(compiler, fields)
+        self.inequality_field = None
+        self.pk_filters = []
+        pks_only = False
+        if len(fields) == 1 and fields[0].primary_key:
+            pks_only = True
+        db_table = self.query.get_meta().db_table
+        self.gae_query = Query(db_table, keys_only=pks_only)
 
-    def results_iter(self):
-        """
-        Returns an iterator over the results from executing this query.
-        """
-        try:
-            fields = None
-            if fields is None:
-                fields = self.get_fields()
+    # This is needed for debugging
+    def __repr__(self):
+        return '<GAEQuery: %r ORDER %r>' % (self.gae_query, self.ordering)
 
-            pks_only = False
-            if len(fields) == 1 and fields[0].primary_key:
-                pks_only = True
-
-            query, pk_filters = self.build_query(pks_only=pks_only)
-
-            if pk_filters:
-                results = self.get_matching_pk(pk_filters)
+    @safe_call
+    def fetch(self, low_mark, high_mark):
+        query = self.gae_query
+        if self.pk_filters:
+            results = self.get_matching_pk(low_mark, high_mark)
+        else:
+            if high_mark is None:
+                results = query.Run(offset=low_mark, prefetch_count=25,
+                                    next_count=75)
+            elif high_mark > low_mark:
+                results = query.Get(high_mark - low_mark, low_mark)
             else:
-                low_mark, high_mark = self.limits
-                if high_mark is None:
-                    results = query.Run(offset=low_mark, prefetch_count=25,
-                                        next_count=75)
-                elif high_mark > low_mark:
-                    results = query.Get(high_mark - low_mark, low_mark)
+                results = ()
+
+        for entity in results:
+            yield self._make_entity(entity)
+
+    @safe_call
+    def count(self, limit=None):
+        if self.pk_filters:
+            return len(self.get_matching_pk(0, limit))
+        return self.gae_query.Count(limit)
+
+    @safe_call
+    def delete(self):
+        if self.pk_filters:
+            keys = [key for key in self.pk_filters if key is not None]
+        else:
+            keys = self.fetch()
+        Delete(keys)
+
+    @safe_call
+    def order_by(self, ordering):
+        self.ordering = ordering
+        gae_ordering = []
+        for order in self.ordering:
+            if order == '?':
+                raise Error("Randomized ordering isn't supported on App Engine")
+            if order.startswith('-'):
+                order, direction = order[1:], Query.DESCENDING
+            else:
+                direction = Query.ASCENDING
+            if order in (self.query.get_meta().pk.column, 'pk'):
+                order = '__key__'
+            gae_ordering.append((order, direction))
+        self.gae_query.Order(*gae_ordering)
+
+    # This function is used by the default add_filters() implementation
+    @safe_call
+    def add_filter(self, column, lookup_type, negated, db_type, value):
+        query = self.gae_query
+
+        # Emulated/converted lookups
+        if column == self.query.get_meta().pk.column:
+            column = '__key__'
+            db_table = self.query.get_meta().db_table
+            if lookup_type in ('exact', 'in'):
+                if self.pk_filters:
+                    raise DatabaseError("You can't apply multiple AND filters "
+                                        "on the primary key. "
+                                        "Did you mean __in=[...]?")
+                # Optimization: batch-get by key
+                if negated:
+                    raise DatabaseError("You can't negate equality lookups on "
+                                        "the primary key.")
+                if not isinstance(value, (tuple, list)):
+                    value = [value]
+                self.pk_filters = [create_key(db_table, pk) for pk in value if pk]
+                return
+            else:
+                # XXX: set db_type to 'gae_key' in order to allow
+                # convert_value_for_db to recognize the value to be a Key and
+                # not a str. Otherwise the key would be converted back to a
+                # unicode (see convert_value_for_db)
+                db_type = 'gae_key'
+                key_type_error = 'Lookup values on primary keys have to be' \
+                                 'a string or an integer.'
+                if lookup_type == 'range':
+                    if isinstance(value,(list, tuple)) and not(isinstance(
+                            value[0], (basestring, int, long)) and \
+                            isinstance(value[1], (basestring, int, long))):
+                        raise DatabaseError(key_type_error)
+                elif not isinstance(value,(basestring, int, long)):
+                    raise DatabaseError(key_type_error)
+                # for lookup type range we have to deal with a list
+                if lookup_type == 'range':
+                    value[0] = create_key(db_table, value[0])
+                    value[1] = create_key(db_table, value[1])
                 else:
-                    results = ()
+                    value = create_key(db_table, value)
 
-            for entity in results:
-                yield self._make_result(entity, fields)
-        except GAEError, e:
-            raise DatabaseError, DatabaseError(*tuple(e)), sys.exc_info()[2]
+        if lookup_type not in OPERATORS_MAP:
+            raise DatabaseError("Lookup type %r isn't supported" % lookup_type)
 
-    def has_results(self):
-        return self.get_count(check_exists=True)
+        # We check for negation after lookup_type isnull because it
+        # simplifies the code. All following lookup_type checks assume
+        # that they're not negated.
+        if lookup_type == 'isnull':
+            if (negated and value) or not value:
+                # TODO/XXX: is everything greater than None?
+                op = '>'
+            else:
+                op = '='
+            value = None
+        elif negated:
+            try:
+                op = NEGATION_MAP[lookup_type]
+            except KeyError:
+                raise DatabaseError("Lookup type %r can't be negated" % lookup_type)
+            if self.inequality_field and column != self.inequality_field:
+                raise DatabaseError("Can't have inequality filters on multiple "
+                    "columns (here: %r and %r)" % (self.inequality_field, column))
+            self.inequality_field = column
+        elif lookup_type == 'startswith':
+            op = '>='
+            query["%s %s" % (column, op)] = self.convert_value_for_db(
+                db_type, value)
+            op = '<='
+            if isinstance(value, str):
+                value = value.decode('utf8')
+            if isinstance(value, Key):
+                value = list(value.to_path())
+                if isinstance(value[-1], str):
+                    value[-1] = value[-1].decode('utf8')
+                value[-1] += u'\ufffd'
+                value = Key.from_path(*value)
+            else:
+                value += u'\ufffd'
+            query["%s %s" % (column, op)] = self.convert_value_for_db(
+                db_type, value)
+            return
+        elif lookup_type in ('range', 'year'):
+            op = '>='
+            query["%s %s" % (column, op)] = self.convert_value_for_db(
+                db_type, value[0])
+            op = '<=' if lookup_type == 'range' else '<'
+            query["%s %s" % (column, op)] = self.convert_value_for_db(
+                db_type, value[1])
+            return
+        else:
+            op = OPERATORS_MAP[lookup_type]
+
+        query["%s %s" % (column, op)] = self.convert_value_for_db(db_type,
+            value)
 
     # ----------------------------------------------
     # Internal API
     # ----------------------------------------------
-    def get_count(self, check_exists=False):
-        """
-        Counts matches using the current filter constraints.
-        """
-        query, pk_filters = self.build_query()
-
-        if pk_filters:
-            return len(self.get_matching_pk(pk_filters))
-
-        if check_exists:
-            high_mark = 1
-        else:
-            high_mark = self.limits[1]
-
-        return query.Count(high_mark)
-
-    def _make_result(self, entity, fields):
+    def _make_entity(self, entity):
         if isinstance(entity, Key):
             key = entity
             entity = {}
@@ -134,199 +228,18 @@ class SQLCompiler(NonrelCompiler):
             key = entity.key()
 
         entity[self.query.get_meta().pk.column] = key
-        # TODO: support lazy loading of fields
-        result = []
-        for field in fields:
-            if not field.null and entity.get(field.column,
-                    field.get_default()) is None:
-                raise DatabaseError("Non-nullable field %s can't be None!" % field.name)
-            result.append(self.convert_value_from_db(field.db_type(
-                connection=self.connection), entity.get(field.column, field.get_default())))
-        return result
+        return entity
 
-    def build_query(self, pks_only=False):
-        query = Query(self.query.get_meta().db_table, keys_only=pks_only)
-        self.negated = False
-        self.inequality_field = None
-
-        pk_filters = self._add_filters_to_query(query, self.query.where)
-
-        # TODO: Add select_related (maybe as separate class/layer, though)
-
-        ordering = []
-        for order in self._get_ordering():
-            if order == '?':
-                raise Error("Randomized ordering isn't supported on App Engine")
-            if LOOKUP_SEP in order:
-                raise DatabaseError("Ordering can't span tables on App Engine (%s)" % order)
-            if order.startswith('-'):
-                order, direction = order[1:], Query.DESCENDING
-            else:
-                direction = Query.ASCENDING
-            if order in (self.query.get_meta().pk.column, 'pk'):
-                order = '__key__'
-            ordering.append((order, direction))
-        query.Order(*ordering)
-
-        # This at least satisfies the most basic unit tests
-        if settings.DEBUG:
-            self.connection.queries.append({'sql': '%r ORDER %r' % (query, ordering)})
-        return query, pk_filters
-
-    def _add_filters_to_query(self, query, filters):
-        pk_filters = []
-        if filters.negated:
-            self.negated = not self.negated
-
-        if not self.negated and filters.connector != AND:
-            raise DatabaseError("Only AND filters are supported")
-
-        # Remove unneeded children from tree
-        children = self._get_children(filters.children)
-
-        if self.negated and filters.connector != OR and len(children) > 1:
-            raise DatabaseError("When negating a whole filter subgroup (e.g., a Q "
-                            "object) the subgroup filters must be connected "
-                            "via OR, so the App Engine backend can convert "
-                            "them like this: "
-                            '"not (a OR b) => (not a) AND (not b)".')
-
-        for child in children:
-            if isinstance(child, Node):
-                sub_pk_filters = self._add_filters_to_query(query, child)
-                if sub_pk_filters:
-                    if pk_filters:
-                        raise DatabaseError("You can't apply multiple AND filters "
-                                        "on the primary key. "
-                                        "Did you mean __in=[...]?")
-                    pk_filters = sub_pk_filters
-                continue
-
-            constraint, lookup_type, annotation, value = child
-            packed, value = constraint.process(lookup_type, value, self.connection)
-            alias, column, db_type = packed
-            value = self._normalize_lookup_value(value, annotation, lookup_type)
-
-            # TODO: Add more reliable check that also works with JOINs
-            is_primary_key = column == self.query.get_meta().pk.column
-            db_table = self.query.get_meta().db_table
-
-            # TODO: fill with real data
-#            joins = None
-#            if joins:
-#                raise DatabaseError("Joins aren't supported")
-
-            if lookup_type == 'startswith':
-                value = value[:-1]
-
-            # Emulated/converted lookups
-            if is_primary_key:
-                column = '__key__'
-                if lookup_type in ('exact', 'in'):
-                    # Optimization: batch-get by key
-                    if self.negated:
-                        raise DatabaseError("You can't negate equality lookups on "
-                                        "the primary key.")
-                    if not isinstance(value, (tuple, list)):
-                        value = [value]
-                    pk_filters = [create_key(db_table, pk) for pk in value if pk]
-                    continue
-                else:
-                    # XXX: set db_type to 'gae_key' in order to allow
-                    # convert_value_for_db to recognize the value to be a Key and
-                    # not a str. Otherwise the key would be converted back to a
-                    # unicode (see convert_value_for_db)
-                    db_type = 'gae_key'
-                    key_type_error = """Lookup values on primary keys have to be 
-                                        a string or an integer."""
-                    if lookup_type == 'range':
-                        if isinstance(value,(list, tuple)) and not(isinstance(
-                                value[0], (basestring, int, long)) and \
-                                isinstance(value[1], (basestring, int, long))):
-                            raise DatabaseError(key_type_error)
-                    elif not isinstance(value,(basestring, int, long)):
-                        raise DatabaseError(key_type_error)
-                    # for lookup type range we have to deal with a list
-                    if lookup_type == 'range':
-                        value[0] = create_key(db_table, value[0])
-                        value[1] = create_key(db_table, value[1])
-                    else:
-                        value = create_key(db_table, value)
-
-            if lookup_type not in OPERATORS_MAP:
-                raise DatabaseError("Lookup type %r isn't supported" % lookup_type)
-
-            # We check for negation after lookup_type isnull because it
-            # simplifies the code. All following lookup_type checks assume
-            # that they're not negated.
-            if lookup_type == 'isnull':
-                if (self.negated and value) or not value:
-                    # TODO/XXX: is everything greater than None?
-                    op = '>'
-                else:
-                    op = '='
-                value = None
-            elif self.negated:
-                try:
-                    op = NEGATION_MAP[lookup_type]
-                except KeyError:
-                    raise DatabaseError("Lookup type %r can't be negated" % lookup_type)
-                if self.inequality_field and column != self.inequality_field:
-                    raise DatabaseError("Can't have inequality filters on multiple "
-                        "columns (here: %r and %r)" % (self.inequality_field, column))
-                self.inequality_field = column
-            elif lookup_type == 'startswith':
-                op = '>='
-                query["%s %s" % (column, op)] = self.convert_value_for_db(
-                    db_type, value)
-                op = '<='
-                if isinstance(value, str):
-                    value = value.decode('utf8')
-                if isinstance(value, Key):
-                    value = list(value.to_path())
-                    if isinstance(value[-1], str):
-                        value[-1] = value[-1].decode('utf8')
-                    value[-1] += u'\ufffd'
-                    value = Key.from_path(*value)
-                else:
-                    value += u'\ufffd'
-                query["%s %s" % (column, op)] = self.convert_value_for_db(
-                    db_type, value)
-                continue
-            elif lookup_type == 'range':
-                op = '>='
-                query["%s %s" % (column, op)] = self.convert_value_for_db(
-                    db_type, value[0])
-                op = '<='
-                query["%s %s" % (column, op)] = self.convert_value_for_db(
-                    db_type, value[1])
-                continue
-            else:
-                op = OPERATORS_MAP[lookup_type]
-
-            query["%s %s" % (column, op)] = self.convert_value_for_db(db_type,
-                value)
-
-        if filters.negated:
-            self.negated = not self.negated
-
-        return pk_filters
-
-    @property
-    def limits(self):
-        return self.query.low_mark, self.query.high_mark
-
-    def get_matching_pk(self, pk_filters):
-        pk_filters = [key for key in pk_filters if key is not None]
+    def get_matching_pk(self, low_mark=0, high_mark=None):
+        pk_filters = [key for key in self.pk_filters if key is not None]
         if not pk_filters:
             return []
 
         results = [result for result in Get(pk_filters)
                    if result is not None
                        and self.matches_filters(result)]
-        if self._get_ordering():
+        if self.ordering:
             results.sort(cmp=self.order_pk_filtered)
-        low_mark, high_mark = self.limits
         if high_mark is not None and high_mark < len(results) - 1:
             results = results[:high_mark]
         if low_mark:
@@ -349,12 +262,18 @@ class SQLCompiler(NonrelCompiler):
         result = self._matches_filters(item, self.query.where)
         return result
 
+class SQLCompiler(NonrelCompiler):
+    """
+    A simple App Engine query: no joins, no distinct, etc.
+    """
+    query_class = GAEQuery
+
     def convert_value_from_db(self, db_type, value):
         if isinstance(value, (list, tuple)) and len(value) and \
                 db_type.startswith('ListField:'):
-            db_sub_type = db_type.split('ListField:')[1]
-            for i, val in enumerate(value):
-                value[i] = self.convert_value_from_db(db_sub_type, val)
+            db_sub_type = db_type.split(':', 1)[1]
+            value = [self.convert_value_from_db(db_sub_type, subvalue)
+                     for subvalue in value]
 
         # the following GAE database types are all unicode subclasses, cast them
         # to unicode so they appear like pure unicode instances for django
@@ -386,25 +305,10 @@ class SQLCompiler(NonrelCompiler):
                     value = value.name()
             else:
                 raise DatabaseError("%s fields cannot be keys on GAE" % db_type)
-#        TODO: Use long in order to simulate decimal?
-#        elif isinstance(value, long):
-#        elif isinstance(value, Rating):
-#        elif isinstance(value, users.User):
-#        elif isinstance(value, BlobKey):
-#        elif isinstance(value, ByteString):
-#        TODO: convert GeoPt to a field used by geo-django (or some other geo
-#        app for django)
-#        elif isinstance(value, GeoPt):
-#        elif isinstance(value, IM):
-
-        # here we have to check the db_type because GAE always stores datetime
-        # instances
         elif db_type == 'date' and isinstance(value, datetime.datetime):
             value = value.date()
         elif db_type == 'time' and isinstance(value, datetime.datetime):
             value = value.time()
-        elif db_type == 'datetime' and isinstance(value, datetime.datetime):
-            value = value
         return value
 
     def convert_value_for_db(self, db_type, value):
@@ -414,9 +318,10 @@ class SQLCompiler(NonrelCompiler):
             value = str(value)
         elif isinstance(value, (list, tuple)) and len(value) and \
                 db_type.startswith('ListField:'):
-            db_sub_type = db_type.split('ListField:')[1]
-            for i, val in enumerate(value):
-                value[i] = self.convert_value_for_db(db_sub_type, val)
+            db_sub_type = db_type.split(':', 1)[1]
+            value = [self.convert_value_for_db(db_sub_type, subvalue)
+                     for subvalue in value]
+
         if db_type == 'gae_key':
             return value
         elif db_type == 'longtext':
@@ -435,18 +340,13 @@ class SQLCompiler(NonrelCompiler):
             value = to_datetime(value)
         return value
 
-class SQLInsertCompiler(SQLCompiler):
-    def execute_sql(self, return_id=False):
+class SQLInsertCompiler(NonrelInsertCompiler, SQLCompiler):
+    @safe_call
+    def insert(self, data, return_id=False):
         kwds = {}
-        data = {}
-        for (field, value), column in zip(self.query.values, self.query.columns):
-            if field is not None:
-                if not field.null and value is None:
-                    raise DatabaseError("You can't set %s (a non-nullable "
-                                        "field) to None!" % field.name)
-                value = self.convert_value_for_db(field.db_type(connection=self.connection),
-                    value)
-            if column == self.query.get_meta().pk.name:
+        gae_data = {}
+        for column, value in data.items():
+            if column == self.query.get_meta().pk.column:
                 if isinstance(value, basestring):
                     kwds['name'] = value
                 else:
@@ -456,31 +356,20 @@ class SQLInsertCompiler(SQLCompiler):
                 # lists to Entity.update) so skip them
                 continue
             else:
-                data[column] = value
+                gae_data[column] = value
 
-        try:
-            entity = Entity(self.query.get_meta().db_table, **kwds)
-            entity.update(data)
-            key = Put(entity)
-            return key.id_or_name()
-        except GAEError, e:
-            raise DatabaseError, DatabaseError(*tuple(e)), sys.exc_info()[2]
+        entity = Entity(self.query.get_meta().db_table, **kwds)
+        entity.update(gae_data)
+        key = Put(entity)
+        return key.id_or_name()
 
 class SQLUpdateCompiler(SQLCompiler):
     def execute_sql(self, result_type=MULTI):
         # TODO: Implement me
-        print 'NO UPDATE'
-        pass
+        raise NotImplementedError('No updates')
 
-class SQLDeleteCompiler(SQLCompiler):
-    def execute_sql(self, result_type=MULTI):
-        try:
-            query, pk_filters = self.build_query()
-            assert not query, 'Deletion queries must only consist of pk filters!'
-            if pk_filters:
-                Delete([key for key in pk_filters if key is not None])
-        except GAEError, e:
-            raise DatabaseError, DatabaseError(*tuple(e)), sys.exc_info()[2]
+class SQLDeleteCompiler(NonrelDeleteCompiler, SQLCompiler):
+    pass
 
 def to_datetime(value):
     """Convert a time or date to a datetime for datastore storage.
@@ -503,12 +392,6 @@ def to_datetime(value):
     elif isinstance(value, datetime.time):
         return datetime.datetime(1970, 1, 1, value.hour, value.minute,
             value.second, value.microsecond)
-
-def empty_iter():
-    """
-    Returns an iterator containing no results.
-    """
-    yield iter([]).next()
 
 def create_key(db_table, value):
     if isinstance(value, (int, long)) and value < 1:
