@@ -8,6 +8,7 @@ Replace these with more appropriate tests for your application.
 from django.test import TestCase
 import logging
 import urllib
+import urllib2
 from django.utils import simplejson
 import time
 import random
@@ -44,12 +45,15 @@ class SimpleTest(TestCase):
         })
         
         url = "https://wwwizardry.expensify.com/api?%s" % args
-        #url = "https://wwwizardry.expensify.com/partnerSignin?%s" % ssoArgs
         logging.info("Testing URL: %s", url)
         #webbrowser.open_new(url)
         try:
-            filehandle = urllib.urlopen(url)
-            print filehandle.read()
+            filehandle = urllib2.urlopen(url)
+            body = filehandle.read()
+            print body
+            bodyJson = simplejson.loads(body)
+            authToken = bodyJson['authToken']
+            print authToken
         except Exception, e:
             #print e.code
             #print e.read()
