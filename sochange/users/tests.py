@@ -8,30 +8,93 @@ Replace these with more appropriate tests for your application.
 from django.test import TestCase
 import logging
 import urllib
+from django.utils import simplejson
+import time
+import random
+from Crypto.Cipher import AES
+import binascii
+import base64
+import webbrowser
+import sys
+
+from ConfigParser import ConfigParser
 
 class SimpleTest(TestCase):
     def test_basic_addition(self):
         """
         Tests that 1 + 1 always equals 2.
         """
-        self.failUnlessEqual(1 + 1, 2)
-        logging.info("Testing URL!!!")
+        #self.failUnlessEqual(1 + 1, 2)
+        
+        cfg = ConfigParser()
+        cfg.read('config/sochange.properties')
+        partnerName = cfg.get("config", "partnerName")
+        email = cfg.get("config", "email")
+        partnerUserID = cfg.get("config", "partnerUserID")
+        partnerPassword = cfg.get("config", "partnerPassword")
+        partnerUserSecret = cfg.get("config", "partnerUserSecret")
+        aesIV = cfg.get("config", "aesIV")
+        aesKey = cfg.get("config", "aesKey")
+        
+        args = urllib.urlencode({
+            'command' : 'Authenticate',
+            'partnerUserID': partnerUserID,
+            'partnerPassword': partnerPassword,
+            'partnerUserSecret': partnerUserSecret,
+        })
+        
+        url = "https://wwwizardry.expensify.com/api?%s" % args
+        #url = "https://wwwizardry.expensify.com/partnerSignin?%s" % ssoArgs
+        logging.info("Testing URL: %s", url)
+        #webbrowser.open_new(url)
+        try:
+            filehandle = urllib.urlopen(url)
+            print filehandle.read()
+        except Exception, e:
+            #print e.code
+            #print e.read()
+            print "Unexpected error:", sys.exc_info()
+            
+        
         """
-        url = "https://wwwizardry.expensify.com/partnerSignin?\
-            partnerPassword=42eab22f02449d51b267&\
-            email=michaelnorman22@gmail.com&\
-            partnerUserID=michaelnorman22@gmail.com&\
-            partnerUserSecret=sanshou22"
+        print partnerUserSecret
+        
+        expires = int(time.time()) + 60*5
+        logging.info("Expires: %s", expires)
+        ssoJson = simplejson.dumps({
+            'arandom' : random.randint(0, 10000000),
+            'expires' : expires, 
+            'partnerPassword': partnerPassword,
+            'partnerUserSecret': partnerUserSecret})
+        
+        # the block size for the cipher object; must be 16, 24, or 32 for AES
+        BLOCK_SIZE = 16
+
+        # the character used for padding--with a block cipher such as AES, the value
+        # you encrypt must be a multiple of BLOCK_SIZE in length.  This character is
+        # used to ensure that your value is always a multiple of BLOCK_SIZE
+        PADDING = 'H'
+        
+        # one-liner to sufficiently pad the text to be encrypted
+        pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
+        
+        key  = binascii.unhexlify(aesIV)
+        IV   = binascii.unhexlify(aesKey)
+        aes  = AES.new( key, AES.MODE_CBC, IV )
+        sso = aes.encrypt(pad(ssoJson))
+        #logging.info("SSO NON BASE 64: %s", sso)
+        
+        sso = base64.b64encode(sso)
+        logging.info("SSO: %s", sso)
+        
+        ssoArgs = urllib.urlencode({
+            'command' : 'Authenticate',
+            'partnerUserID': partnerUserID,
+            'sso' : sso,
+        })
         """
-        url = "https://api.expensify.com?\
-            command=Authenticate&\
-            partnerName=wwwizardry&\
-            partnerPassword=42eab22f02449d51b267&\
-            partnerUserID=michaelnorman22@gmail.com&\
-            partnerUserSecret=sanshou22&\
-            useExpensifyLogin=true"
-        filehandle = urllib.urlopen(url)
-        print filehandle.read()
+
+            
 
 __test__ = {"doctest": """
 Another way to test that 1 + 1 is equal to 2.
