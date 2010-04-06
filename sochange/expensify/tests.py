@@ -9,8 +9,10 @@ from expensify_api import Expensify
 
 class ApiTest(TestCase):
     def test_api(self):
-        api = Expensify();
-        api.authenticate();
+        api = Expensify()
+        api.getTransactionList()
+        #api.getCardList()
+        #api.authenticate()
 
 
 
