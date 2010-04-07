@@ -216,7 +216,7 @@ class User(models.Model):
 
     # Eventually this should be a ManyToMany relationship
     # But for now we assume the user is part of only one campaign
-    campaign = models.ForeignKey(Campaign)
+    campaign = models.ForeignKey(Campaign, blank=True, null=True)
 
     ##### End SoChange-specific 
     
