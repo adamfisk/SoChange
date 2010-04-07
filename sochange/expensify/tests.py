@@ -12,20 +12,23 @@ class ApiTest(TestCase):
     def test_api(self):
         cfg = ConfigParser()
         cfg.read('config/sochange.properties')
-        #partnerName = cfg.get("config", "partnerName")
-        #email = cfg.get("config", "email")
-        #aesIV = cfg.get("config", "aesIV")
-        #aesKey = cfg.get("config", "aesKey")
         
         partnerPassword = cfg.get("config", "partnerPassword")
         partnerUserID = cfg.get("config", "partnerUserID")
         partnerUserSecret = cfg.get("config", "partnerUserSecret")
         
         api = Expensify(partnerUserID, partnerUserSecret)
-        api.createAccount('afisk@littleshoot.org')
-        #api.getTransactionList()
-        #api.getCardList()
-        #api.authenticate()
+        authJson = api.authenticate()
+        accountJson = api.createAccount('afisk@littleshoot.org')
+        
+        # This account should already exist, returning 300
+        self.failUnlessEqual(accountJson['jsonCode'], 300)
+        
+        transactionJson = api.getTransactionList()
+        self.failUnless('transactionList' in transactionJson, 'No transaction list')
+
+        cardJson = api.getCardList()
+        self.failUnless('cardList' in cardJson, 'No card list')
 
 
 

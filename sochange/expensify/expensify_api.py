@@ -8,6 +8,9 @@ import time
 
 from ConfigParser import ConfigParser
 
+"""
+ Class for interacting with the Expensify API.
+"""
 class Expensify():
     
     authToken = ""
@@ -16,9 +19,6 @@ class Expensify():
     def __init__(self, partnerUserID, partnerUserSecret):
         cfg = ConfigParser()
         cfg.read('config/sochange.properties')
-        #email = cfg.get("config", "email")
-        #aesIV = cfg.get("config", "aesIV")
-        #aesKey = cfg.get("config", "aesKey")
         
         self.partnerPassword = cfg.get("config", "partnerPassword")
         self.partnerName = cfg.get("config", "partnerName")
@@ -94,10 +94,13 @@ class Expensify():
             body = filehandle.read()
             print body
             bodyJson = simplejson.loads(body)
-            tok = bodyJson['authToken']
-            if tok is not None and tok != "":
-                self.authToken = tok
-                self.authTime = time.time()
+            if 'authToken' in bodyJson:
+                tok = bodyJson['authToken']
+                if tok is not None and tok != "":
+                    self.authToken = tok
+                    self.authTime = time.time()
+            else:
+                logging.info("No auth token returned")
             return bodyJson
         except HTTPError, e:
             print e.code, e.msg
