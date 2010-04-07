@@ -10,6 +10,8 @@ from django.utils.encoding import smart_str
 from django.utils.hashcompat import md5_constructor, sha_constructor
 from django.utils.translation import ugettext_lazy as _
 
+# so change imports, temporarily symlinked
+from django.contrib.auth.sochange.campaigns.models import Campaign
 
 UNUSABLE_PASSWORD = '!' # This will never be a valid hash
 
@@ -192,6 +194,8 @@ class User(models.Model):
     Users within the Django authentication system are represented by this model.
 
     Username and password are required. Other fields are optional.
+
+    * MODIFIED for SoChange to get rid of ManyToMany attributes for now
     """
     username = models.CharField(_('username'), max_length=30, unique=True, help_text=_("Required. 30 characters or fewer. Letters, numbers and @/./+/-/_ characters"))
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
@@ -203,10 +207,19 @@ class User(models.Model):
     is_superuser = models.BooleanField(_('superuser status'), default=False, help_text=_("Designates that this user has all permissions without explicitly assigning them."))
     last_login = models.DateTimeField(_('last login'), default=datetime.datetime.now)
     date_joined = models.DateTimeField(_('date joined'), default=datetime.datetime.now)
-    groups = models.ManyToManyField(Group, verbose_name=_('groups'), blank=True,
-        help_text=_("In addition to the permissions manually assigned, this user will also get all permissions granted to each group he/she is in."))
-    user_permissions = models.ManyToManyField(Permission, verbose_name=_('user permissions'), blank=True)
+#    groups = models.ManyToManyField(Group, verbose_name=_('groups'), blank=True,
+#        help_text=_("In addition to the permissions manually assigned, this user will also get all permissions granted to each group he/she is in."))
+#    user_permissions = models.ManyToManyField(Permission, verbose_name=_('user permissions'), blank=True)
     objects = UserManager()
+
+    ##### SoChange-specific attributes #####
+
+    # Eventually this should be a ManyToMany relationship
+    # But for now we assume the user is part of only one campaign
+    campaign = models.ForeignKey(Campaign, blank=True, null=True)
+
+    ##### End SoChange-specific 
+    
 
     class Meta:
         verbose_name = _('user')
@@ -267,27 +280,27 @@ class User(models.Model):
     def has_usable_password(self):
         return self.password != UNUSABLE_PASSWORD
 
-    def get_group_permissions(self, obj=None):
-        """
-        Returns a list of permission strings that this user has through
-        his/her groups. This method queries all available auth backends.
-        If an object is passed in, only permissions matching this object
-        are returned.
-        """
-        permissions = set()
-        for backend in auth.get_backends():
-            if hasattr(backend, "get_group_permissions"):
-                if obj is not None:
-                    if backend.supports_object_permissions:
-                        permissions.update(
-                            backend.get_group_permissions(self, obj)
-                        )
-                else:
-                    permissions.update(backend.get_group_permissions(self))
-        return permissions
+#    def get_group_permissions(self, obj=None):
+#        """
+#        Returns a list of permission strings that this user has through
+#        his/her groups. This method queries all available auth backends.
+#        If an object is passed in, only permissions matching this object
+#        are returned.
+#        """
+#        permissions = set()
+#        for backend in auth.get_backends():
+#            if hasattr(backend, "get_group_permissions"):
+#                if obj is not None:
+#                    if backend.supports_object_permissions:
+#                        permissions.update(
+#                            backend.get_group_permissions(self, obj)
+#                        )
+#                else:
+#                    permissions.update(backend.get_group_permissions(self))
+#        return permissions
 
-    def get_all_permissions(self, obj=None):
-        return _user_get_all_permissions(self, obj)
+#    def get_all_permissions(self, obj=None):
+#        return _user_get_all_permissions(self, obj)
 
     def has_perm(self, perm, obj=None):
         """

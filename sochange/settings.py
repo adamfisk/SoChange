@@ -7,9 +7,10 @@ INSTALLED_APPS = (
     'expensify',
     'djangoappengine',
     'djangotoolbox',
-#    'django.contrib.auth',
+    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.admin',
 )
 
 ADMIN_MEDIA_PREFIX = '/media/admin/'
