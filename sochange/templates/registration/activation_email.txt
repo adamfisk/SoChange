@@ -1,0 +1,7 @@
+Thank you for registering with SoChange from the site {{site}}.
+
+Your activation key is {{activation_key}}.  You have {{expiration_days}} days to register.
+
+
+Sincerely,
+The SoChange Team

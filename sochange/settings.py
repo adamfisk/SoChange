@@ -5,6 +5,7 @@ SECRET_KEY = '=r-$b*8hglm+858&9t043hlm6-&6-3d3vfc4((7yd0dbrakhvi'
 INSTALLED_APPS = (
     'users',
     'expensify',
+    'registration',
     'djangoappengine',
     'djangotoolbox',
     'django.contrib.auth',
@@ -12,6 +13,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.admin',
 )
+
+ACCOUNT_ACTIVATION_DAYS = 7 # variable required for registration app
 
 ADMIN_MEDIA_PREFIX = '/media/admin/'
 
