@@ -9,8 +9,9 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from registration.backends import get_backend
+from django.views.decorators.csrf import csrf_exempt
 
-
+@csrf_exempt
 def activate(request, backend,
              template_name='registration/activate.html',
              success_url=None, extra_context=None, **kwargs):
@@ -91,7 +92,8 @@ def activate(request, backend,
                               kwargs,
                               context_instance=context)
 
-
+# ignore csrf for now since it's causing 403 error 
+@csrf_exempt
 def register(request, backend, success_url=None, form_class=None,
              disallowed_url='registration_disallowed',
              template_name='registration/registration_form.html',

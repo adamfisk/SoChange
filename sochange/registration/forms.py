@@ -49,7 +49,9 @@ class RegistrationForm(forms.Form):
         
         """
         try:
-            user = User.objects.get(username__iexact=self.cleaned_data['username'])
+            #user = User.objects.get(username__iexact=self.cleaned_data['username']) - django-nonrel mod
+            user = User.objects.get(username__exact=self.cleaned_data['username'])
+
         except User.DoesNotExist:
             return self.cleaned_data['username']
         raise forms.ValidationError(_("A user with that username already exists."))
@@ -91,7 +93,8 @@ class RegistrationFormUniqueEmail(RegistrationForm):
         site.
         
         """
-        if User.objects.filter(email__iexact=self.cleaned_data['email']):
+        #if User.objects.filter(email__iexact=self.cleaned_data['email']): # django-nonrel mod
+        if User.objects.filter(email__exact=self.cleaned_data['email']):
             raise forms.ValidationError(_("This email address is already in use. Please supply a different email address."))
         return self.cleaned_data['email']
 
