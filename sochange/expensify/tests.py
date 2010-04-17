@@ -21,7 +21,7 @@ class ApiTest(TestCase):
         authJson = api.authenticate()
         accountJson = api.createAccount('afisk@littleshoot.org')
         
-        # This account should already exist, returning 300
+        # This account should already exist, returning 300 
         self.failUnlessEqual(accountJson['jsonCode'], 300)
         
         transactionJson = api.getTransactionList()

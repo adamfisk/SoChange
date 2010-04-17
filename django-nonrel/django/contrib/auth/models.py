@@ -11,7 +11,8 @@ from django.utils.hashcompat import md5_constructor, sha_constructor
 from django.utils.translation import ugettext_lazy as _
 
 # so change imports, temporarily symlinked
-from django.contrib.auth.sochange.campaigns.models import Campaign
+#from django.contrib.auth.sochange.campaigns.models import Campaign
+from sochange.campaigns.models import Campaign
 
 UNUSABLE_PASSWORD = '!' # This will never be a valid hash
 
