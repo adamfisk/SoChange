@@ -3,7 +3,7 @@ from django.views.generic.simple import direct_to_template
 
 from users.views import user_page 
 
-urlpatterns = patterns('sochange.users.views',
+urlpatterns = patterns('users.views',
     (r'^$', 'index'),
     #url(r'^$', 'index', name='user_index'),
     (r'^login/', 'login'),
