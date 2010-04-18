@@ -1,0 +1,51 @@
+body {
+	background-color: #00853E;
+
+}
+h1, h2, h3, p {
+	color: white;
+	font-family: 'Lucida Sans Unicode', sans-serif;
+}
+
+h1 {
+	font-size: 44px;
+	font-style: normal;
+	font-weight: bold;
+	text-transform: normal;
+	letter-spacing: -3px;
+	line-height: 1.2em;
+	text-align: center;
+}
+
+p {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+#about {
+	width: 70%;
+	margin-left: auto;
+	margin-right: auto;
+	font-style: italic;
+
+}
+
+
+
+p.small{
+	font-size: 12px;
+}
+
+div.main {
+	margin: 0px auto;
+	padding-top: 200px;
+	width:600px;
+	height:600px;
+}
+
+input.submit { padding : 8px 0; float : right; width : 64px; display : block; font-size : 12px; cursor : pointer; text-align : center; }
+
+#submitForm {
+
+}
+
