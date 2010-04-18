@@ -14,6 +14,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
 )
 
+DEFAULT_FROM_EMAIL = 'networthy@littleshoot.org'
+#EMAIL_BACKEND = 'djangoappengine.EmailBackend' 
+
 ACCOUNT_ACTIVATION_DAYS = 7 # variable required for registration app
 
 ADMIN_MEDIA_PREFIX = '/media/admin/'
