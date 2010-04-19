@@ -16,17 +16,17 @@
 		}
 
 ?>
+
 <div class="main">
 	<h1> SoChange</h1>
 	<div id="about">
-	<p> SoChange is fun way for groups of consumers to discuss the behavior of the companies they buy from and prove that they will reward them for making a positive impact on the world.
-	</p>
+		<p> SoChange is fun way for groups of consumers to discuss the behavior of the companies they buy from and prove that they will reward them for making a positive impact on the world.
+		</p>
 	</div>
-	<h3 style="text-align: right; padding-right: 100px; ">Thank You!</h3>
-
+	<div style="margin-top:50px;">
+		<h3 style="text-align: right; padding-right: 50px; ">Thank You!</h3>
+	</div>
 </div> 
 
-</div>
 </body>
 </html>
-

@@ -14,15 +14,21 @@
 	<p> SoChange is fun way for groups of consumers to discuss the behavior of the companies they buy from and prove that they will reward them for making a positive impact on the world.
 	</p>
 </div>
-		<form method="post" action="thankyou.php" method="post"> 
+	<div style="margin-top:50px;">
+		<form method="post" action="http://gleb.mit.edu/sochange/thankyou.php"> 
 			<p class="small"> 
-				<label for="email">Share your email so we can let you know when you can join!</label> 
+			<label for="email" >
+				Share your email so we can let you know when you can join!
+			</label> 
 				<span>
-					<input type="text" name="email" maxlength="42" />
-					<input type="submit" value="Submit"  /> 
+					<div class="emailbox">
+						<input type="text" name="email" maxlength="100" id="email"/>
+						<input type="submit" value="Submit" class="submitbutton" /> 
+					</div>
 				</span> 
 			</p> 
 		</form> 
+	</div>
 </div> 
 
 </div>

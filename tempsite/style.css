@@ -1,32 +1,28 @@
 body {
-	background-color: #00853E;
-
-}
-h1, h2, h3, p {
-	color: white;
+	/*background-color: #00853E;*/
+	background: #FFFFFF url(greenbg.png) repeat-x;
 	font-family: 'Lucida Sans Unicode', sans-serif;
+	color: white;
+
 }
 
 h1 {
-	font-size: 44px;
-	font-style: normal;
+	font-size: 60px;
 	font-weight: bold;
-	text-transform: normal;
 	letter-spacing: -3px;
 	line-height: 1.2em;
 	text-align: center;
 }
 
 p {
-	font-size: 14px;
+	font-size: 20px;
 	font-weight: bold;
 }
 
 #about {
-	width: 70%;
+	width: 100%;
 	margin-left: auto;
 	margin-right: auto;
-	font-style: italic;
 
 }
 
@@ -38,14 +34,35 @@ p.small{
 
 div.main {
 	margin: 0px auto;
-	padding-top: 200px;
-	width:600px;
+	padding-top: 100px;
+	width:500px;
 	height:600px;
 }
 
-input.submit { padding : 8px 0; float : right; width : 64px; display : block; font-size : 12px; cursor : pointer; text-align : center; }
+div.emailbox {
+	margin-top: 20px;
+	position: relative;
+	right: 0;
+}
+
+#email{
+	width:400px;
+}
+
+	
+
+input.submitbutton { 
+	height : 30px;
+	float : right; 
+	width: 64px;
+	display : block; 
+	font-size : 12px; 
+	cursor : pointer; 
+	text-align : center; }
 
 #submitForm {
 
 }
+
+
 
