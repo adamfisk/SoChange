@@ -3,6 +3,7 @@ import urllib
 import urllib2
 from urllib2 import HTTPError
 import sys
+import os
 from django.utils import simplejson
 import time
 
@@ -16,9 +17,11 @@ class Expensify():
     authToken = ""
     authTime = 0
     
-    def __init__(self, partnerUserID, partnerUserSecret):
+    def __init__(self, partnerUserID='', partnerUserSecret=''):
         cfg = ConfigParser()
-        cfg.read('config/sochange.properties')
+        props = os.path.join(os.path.dirname(__file__), 'sochange.properties')
+        logging.info("Config path: %s", props)
+        cfg.read(props)
         
         self.partnerPassword = cfg.get("config", "partnerPassword")
         self.partnerName = cfg.get("config", "partnerName")
@@ -46,7 +49,7 @@ class Expensify():
         }
         # If we get a 300-level response here, it means the account already
         # exists.
-        return self.__returnJson(args)
+        self.__returnJson(args)
     
     def get(self, list):
         args = self.__newAuthCommandBase('Get')
@@ -101,7 +104,7 @@ class Expensify():
                     self.authTime = time.time()
             else:
                 logging.info("No auth token returned")
-            return bodyJson
+            #return bodyJson
         except HTTPError, e:
             print e.code, e.msg
             print "HTTP error:", sys.exc_info()
