@@ -3,4 +3,5 @@ from django.views.generic.simple import direct_to_template
 
 urlpatterns = patterns('emailCapture.views',
     (r'^$', 'index'),
+    (r'^thankyou$', 'thankyou'),
 )

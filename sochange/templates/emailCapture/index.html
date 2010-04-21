@@ -15,14 +15,15 @@
 	</p>
 </div>
 	<div style="margin-top:50px;">
-		<form method="post" action="http://gleb.mit.edu/sochange/thankyou.php"> 
+		<form method="post" action="/about/thankyou">
 			<p class="small"> 
 			<label for="email" >
 				Share your email so we can let you know when you can join!
 			</label> 
 				<span>
 					<div class="emailbox">
-						<input type="text" name="email" maxlength="100" id="email"/>
+						{{ form.email }}
+						<!--<input type="text" name="email" maxlength="100" id="email"/>-->
 						<input type="submit" value="Submit" class="submitbutton" /> 
 					</div>
 				</span> 

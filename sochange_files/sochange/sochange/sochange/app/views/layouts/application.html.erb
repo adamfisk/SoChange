@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <title><%= h(yield(:title) || "SoChange") %></title>
+	<%= javascript_include_tag 'jquery-1.4.2.min', 'jquery-ui-1.8.custom.min','application' %>
+    <%= stylesheet_link_tag 'cupertino/jquery-ui-1.8.custom','application' %>
+    <%= yield(:head) %>
+  </head>
+  <body id='<%= h(yield(:bodyid) || "home")%>'>
+	<div id="top">
+		<div class="container">
+			<div id="navbar" class="clear">
+				
+				<div id="navbar-logo">
+						<h1>SoChange</h1>
+				</div>
+			
+				
+				<div id="navbar-search">
+						<input type="text" name="search">
+				</div>
+			
+				
+				<div id="navbar-links">
+					<ul id="nav" class="nav">
+						<li class="home"><%= link_to "Home", home_path %></li>
+						<li class="missions"><%= link_to "Missions", missions_path %></li>	
+						<li class="changemakers"><%= link_to "Change Makers", changemakers_path %></li>
+						<li class="myprofile"><%= link_to "Profile", myprofile_path %></li>
+					</ul>
+				</div>
+				
+			
+			</div>
+		</div>
+	</div>
+	<div id="bottom">
+		<div class="container">
+			 <%- flash.each do |name, msg| -%>
+		        <%= content_tag :div, msg, :id => "flash_#{name}" %>
+		      <%- end -%>
+
+		      <%- if show_title? -%>
+		        <h1><%=h yield(:title) %></h1>
+		      <%- end -%>
+
+		      <%= yield %>
+			
+		</div>
+	     
+	  
+	</div>
+    
+  </body>
+</html>
