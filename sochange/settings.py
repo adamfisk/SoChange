@@ -6,6 +6,7 @@ INSTALLED_APPS = (
     'users',
     'expensify',
     'registration',
+    'emailCapture',
     'djangoappengine',
     'djangotoolbox',
     'django.contrib.auth',

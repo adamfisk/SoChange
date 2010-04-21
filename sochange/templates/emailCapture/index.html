@@ -15,7 +15,7 @@
 	</p>
 </div>
 	<div style="margin-top:50px;">
-		<form method="post" action="/about/thankyou">
+		<form method="post" action="/about/">
 			<p class="small"> 
 			<label for="email" >
 				Share your email so we can let you know when you can join!
@@ -25,6 +25,11 @@
 						{{ form.email }}
 						<!--<input type="text" name="email" maxlength="100" id="email"/>-->
 						<input type="submit" value="Submit" class="submitbutton" /> 
+						{% if form.email.errors %}
+    				<p class="small">
+								Please enter a valid email address.
+						</p>	
+						{% endif %}
 					</div>
 				</span> 
 			</p> 
