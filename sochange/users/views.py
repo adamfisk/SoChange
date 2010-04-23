@@ -29,3 +29,6 @@ def user_page(request, username):
 def profile(request):
     return render_to_response('users/profile.html')
 
+def home(request):
+    return render_to_response('users/home.html')
+

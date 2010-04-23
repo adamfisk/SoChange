@@ -3,6 +3,7 @@ from django.views.generic.simple import direct_to_template
 
 from users.views import user_page
 from users.views import profile 
+from users.views import home 
 
 urlpatterns = patterns('users.views',
     (r'^$', 'index'),
@@ -10,6 +11,7 @@ urlpatterns = patterns('users.views',
     (r'^login/', 'login'),
     url(r'^logged_in$', 'logged_in', name='logged_in'),
     (r'^profile/', profile), 
+    (r'^home/', home), 
     (r'^(\w+)/$', user_page), #needs to be changed since it matches anything
 
 )
