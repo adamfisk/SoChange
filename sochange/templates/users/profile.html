@@ -31,7 +31,13 @@
 	</div>
 	<div class="column span-7">
 		<div class="page-content">
-			<h1>Adam Fisk</h1>
+			<h1>
+				{% if user %}
+					{{ user.username }}
+				{% else %}
+					DEFAULT
+				{% endif %}	
+			</h1>
 			<div id="tabs">
 
 				<ul>

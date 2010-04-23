@@ -15,16 +15,31 @@ def logged_in(request):
     return HttpResponse("All Logged In!!")
 
 def user_page(request, username):
-  try:
-     user = User.objects.get(username=username)
-  except:
-     raise Http404('Requested user not found.')
-  template = get_template('users/user_page.html')
-  variables = RequestContext(request, {
-     'username': username,
-  })
-  output = template.render(variables)
-  return HttpResponse(output)
+    try:
+       user = User.objects.get(username=username)
+    except:
+       raise Http404('Requested user not found.')
+    template = get_template('users/home.html')
+    variables = RequestContext(request, {
+       'user' : user,
+       'username': username,
+    })
+    output = template.render(variables)
+    return HttpResponse(output)
+
+def user_profile(request, username):
+    try:
+       user = User.objects.get(username=username)
+    except:
+       raise Http404('Requested user not found.')
+    template = get_template('users/profile.html')
+    variables = RequestContext(request, {
+       'user' : user,
+       'username': username,
+    })
+    output = template.render(variables)
+    return HttpResponse(output)
+
  
 def profile(request):
     return render_to_response('users/profile.html')
