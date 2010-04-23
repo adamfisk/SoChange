@@ -1,76 +1,60 @@
-<!DOCTYPE html 
-     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
     dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}"
     xml:lang="{% firstof LANGUAGE_CODE 'en' %}"
     lang="{% firstof LANGUAGE_CODE 'en' %}">
   <head>
     <title>{% block title %}{% endblock %} - SoChange</title>
-
-    {% block css %}
-    <!--
-    <link rel="stylesheet" type="text/css" media="screen,projection" href="/css/ez-min.css">
-    -->
-    <link rel="stylesheet" href="/css/blueprint/screen.css" type="text/css" media="screen, projection">
-    <link rel="stylesheet" href="/css/blueprint/print.css" type="text/css" media="print">
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="/css/blueprint/ie.css" type="text/css" media="screen, projection">
-    <![endif]-->
-    <link rel="stylesheet" href="/css/blueprint/plugins/fancy-type/screen.css" type="text/css" media="screen, projection" /> 
-    {% endblock %}
+		{% block css %}
+    <link rel="stylesheet" href="/css/ruby_styles/stylesheets/cupertino/jquery-ui-1.8.custom" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/css/ruby_styles/stylesheets/application.css" type="text/css" media="screen, projection">
+    {% endblock css %}
 
     {% block js %}
-    {% endblock %}
+		<script src="/css/ruby_styles/javascripts/jquery-1.4.2.min.js"></script>
+		<script src="/css/ruby_styles/javascripts/jquery-ui-1.8.custom.min"></script>
+		<script src="/css/ruby_styles/javascripts/application.js"></script>
+    {% endblock js %}
 
-    {% block extra-head %}{% endblock %}
+		{% block extra-head %}
+		{% endblock extra-head %}
+
   </head>
-
-  <body>
-    <div class="container showgrid">   
-      <div class="span-24 last">
-        <div class="span-8">
-          LOGO
-        </div>
-        <div class="span-4">
-          Home
-        </div>
-        <div class="span-4">
-          Campaigns
-        </div>
-        <div class="span-4">
-          Changers
-        </div>
-        <div class="span-4 last">
-          Profile
-        </div>
-      </div>
-      <div class="span-4">
-        <div class="span-4 last">
-          Campaigns
-        </div>
-        <div class="span-1">
-        </div>
-        <div class="span-3 last">
-          Badges
-        </div>
-      </div>
-      
-      <div class="span-20">
-        <div>
-          Search Box
-        </div>
-        <div>
-          <center>
-            <h1>Real Time Feed</h1>
-            More info about campaigns and such.
-						{% block content %}{% endblock %}
-          </center>
-        </div>
-      </div>
-      <div class="span-24 last">
-        SoChange 2010
-      </div>
-    </div>
+  <body id="home">
+	<div id="top">
+		<div class="container">
+			<div id="navbar" class="clear">
+				
+				<div id="navbar-logo">
+						<h1>SoChange</h1>
+				</div>
+			
+				
+				<div id="navbar-search">
+						<input type="text" name="search">
+				</div>
+			
+				
+				<div id="navbar-links">
+					<ul id="nav" class="nav">
+						<li class="home">Home</li>
+						<li class="missions">Missions</li>	
+						<li class="changemakers">Change Makers</li>
+						<li class="myprofile">Profile</li>
+					</ul>
+				</div>
+				
+			
+			</div>
+		</div>
+	</div>
+	<div id="bottom">
+		<div class="container">
+			{% block content %}
+			{% endblock content %}
+		</div>
+	</div>
+    
   </body>
 </html>
