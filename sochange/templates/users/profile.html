@@ -1,12 +1,13 @@
-<% bodyid "myprofile" %>
+{% extends "base.html" %}
 
+{% block content %}
 
 <div class="page">
 	<div class="column span-3 ui-corner-all profile-left-column">
 		<div style="padding: 5px;">
 			
 			<div class="toolbox">
-				<img src="/images/1.jpg" alt="Person" class="ui-corner-all"/>
+				<img src="/css/ruby_styles/images/1.jpg" alt="Person" class="ui-corner-all"/>
 			</div>
 
 			<div class="ui-widget toolbox">
@@ -50,7 +51,7 @@
 					
 					<table cellpadding="10" cellspacing="10" class="newsfeed">
 						<tr>
-							<td><img src="/images/1.jpg" style="width: 60px;" class="ui-corner-all"></img></td>
+							<td><img src="/css/ruby_styles/images/1.jpg" style="width: 60px;" class="ui-corner-all"></img></td>
 							<td>
 								<table cellpadding="0" cellspacing="0">
 									<tr>
@@ -66,7 +67,7 @@
 							</td>
 						</tr>
 						<tr class="even-row">
-							<td class="even-row-cell"><img src="/images/2.jpg" style="width: 60px;" class="ui-corner-all"></img></td>
+							<td class="even-row-cell"><img src="/css/ruby_styles/images/2.jpg" style="width: 60px;" class="ui-corner-all"></img></td>
 							<td class="even-row-cell">
 								<table cellpadding="0" cellspacing="0">
 									<tr>
@@ -99,8 +100,6 @@
 </div>
 
 
-
-
 <script>
 if($) {
 	$(document).ready(function(){
@@ -108,3 +107,5 @@ if($) {
 	});
 }
 </script>
+
+{% endblock content %}

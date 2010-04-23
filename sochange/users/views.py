@@ -26,4 +26,6 @@ def user_page(request, username):
   output = template.render(variables)
   return HttpResponse(output)
  
+def profile(request):
+    return render_to_response('users/profile.html')
 
