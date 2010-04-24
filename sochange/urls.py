@@ -4,6 +4,7 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
+    (r'^login/$', 'django.contrib.auth.views.login'),
     (r'^about/', include('emailCapture.urls')), # temporary email collector
     (r'^users/', include('users.urls')),
     (r'^admin/', include(admin.site.urls)),

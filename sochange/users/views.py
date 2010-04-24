@@ -4,10 +4,12 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.template.loader import get_template
+from django.contrib.auth.decorators import login_required
 
 def index(request):
     return render_to_response('users/index.html', context_instance=RequestContext(request))
 
+@login_required
 def login(request):
     return HttpResponseRedirect(reverse('logged_in'))
 

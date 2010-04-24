@@ -22,5 +22,9 @@ ACCOUNT_ACTIVATION_DAYS = 7 # variable required for registration app
 
 ADMIN_MEDIA_PREFIX = '/media/admin/'
 
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/users/home/'
+
+
 import os
 TEMPLATE_DIRS = (os.path.join(os.path.dirname(__file__), 'templates'),)
