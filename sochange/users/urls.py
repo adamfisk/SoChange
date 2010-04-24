@@ -4,7 +4,7 @@ from django.views.generic.simple import direct_to_template
 urlpatterns = patterns('users.views',
     (r'^$', 'index'),
     #url(r'^$', 'index', name='user_index'),
-    (r'^login/', 'login'),
+    (r'^login/', 'user_login'),
     url(r'^logged_in$', 'logged_in', name='logged_in'),
     (r'^profile/', 'profile'), 
     (r'^home/', 'home'), 

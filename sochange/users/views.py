@@ -5,17 +5,38 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.template.loader import get_template
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+
+import logging
 
 def index(request):
+    logging.info("Rendering index")
     return render_to_response('users/index.html', context_instance=RequestContext(request))
 
-@login_required
-def login(request):
-    return HttpResponseRedirect(reverse('logged_in'))
+def user_login(request):
+    logging.info('Got login!!')
+    #return HttpResponseRedirect(reverse('logged_in'))
+    username = request.POST['username']
+    password = request.POST['password']
+    logging.info("User:  %s", username)
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        if user.is_active:
+            login(request, user)
+            # Redirect to a success page.
+            return HttpResponseRedirect(reverse('logged_in'))
+        else:
+            # Return a 'disabled account' error message
+            return HttpResponse("Not active?")
+    else:
+        # Return an 'invalid login' error message.
+        return HttpResponse("Hmnnn...no go!!")
 
 def logged_in(request):
+    logging.info('Got logged in!!')
     return HttpResponse("All Logged In!!")
 
+@login_required
 def user_page(request, username):
     try:
        user = User.objects.get(username=username)
