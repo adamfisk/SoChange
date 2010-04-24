@@ -9,7 +9,7 @@ from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils.hashcompat import sha_constructor
 from django.utils.translation import ugettext_lazy as _
-
+import logging
 
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
 
@@ -70,6 +70,7 @@ class RegistrationManager(models.Manager):
         user. To disable this, pass ``send_email=False``.
         
         """
+        logging.info("************Creating inactive user for: %s", email)
         new_user = User.objects.create_user(username, email, password)
         new_user.is_active = False
         new_user.save()
@@ -77,6 +78,7 @@ class RegistrationManager(models.Manager):
         registration_profile = self.create_profile(new_user)
 
         if send_email:
+            logging.info("************Sending e-mail to: %s", email)
             registration_profile.send_activation_email(site)
 
         return new_user
@@ -92,6 +94,7 @@ class RegistrationManager(models.Manager):
         username and a random salt.
         
         """
+        logging.info("Creating profile...")
         salt = sha_constructor(str(random.random())).hexdigest()[:5]
         username = user.username
         if isinstance(username, unicode):
@@ -242,6 +245,7 @@ class RegistrationProfile(models.Model):
             framework for details regarding these objects' interfaces.
 
         """
+        logging.info("Sending activation e-mail!!!")
         ctx_dict = {'activation_key': self.activation_key,
                     'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
                     'site': site}

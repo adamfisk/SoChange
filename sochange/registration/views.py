@@ -10,6 +10,7 @@ from django.template import RequestContext
 
 from registration.backends import get_backend
 from django.views.decorators.csrf import csrf_exempt
+import logging
 
 @csrf_exempt
 def activate(request, backend,
@@ -177,22 +178,28 @@ def register(request, backend, success_url=None, form_class=None,
     argument.
     
     """
+    logging.info("Registering!!!")
     backend = get_backend(backend)
     if not backend.registration_allowed(request):
         return redirect(disallowed_url)
     if form_class is None:
         form_class = backend.get_form_class(request)
 
+    logging.info("Form class: %s", form_class)
     if request.method == 'POST':
+        logging.info("Received a POST request")
         form = form_class(data=request.POST, files=request.FILES)
         if form.is_valid():
             new_user = backend.register(request, **form.cleaned_data)
             if success_url is None:
                 to, args, kwargs = backend.post_registration_redirect(request, new_user)
+                logging.info("Redirecting to: %s", to)
                 return redirect(to, *args, **kwargs)
             else:
+                logging.info("Going to success URL: %s", success_url)
                 return redirect(success_url)
     else:
+        logging.info("Just using form class")
         form = form_class()
     
     if extra_context is None:
