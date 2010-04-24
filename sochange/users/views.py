@@ -12,6 +12,11 @@ import logging
 def index(request):
     logging.info("Rendering index")
     return render_to_response('users/index.html', context_instance=RequestContext(request))
+    
+    
+@login_required
+def login_required_test(request):
+    return HttpResponse("@login_required seems to work!!")
 
 def user_login(request):
     logging.info('Got login!!')
