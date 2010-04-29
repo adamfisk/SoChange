@@ -4,6 +4,10 @@
 {% if error_message %}
 <p class="errornote">{{ error_message }}</p>
 {% endif %}
+
+{% if user.is_authenticated %}
+Welcome to SoChange, {{ user.username }}.
+{% else %}
 <div id="content-main">
 <form action="/users/login/" method="post" id="login-form">{% csrf_token %}
   <div class="form-row">
@@ -22,5 +26,6 @@
 document.getElementById('id_username').focus()
 </script>
 </div>
+{% endif %}
 {% endblock %}
 
