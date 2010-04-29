@@ -6,7 +6,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     #(r'^$', direct_to_template, {'template': 'index.html'}),
-    (r'^$', 'users.views.index'),
+    url(r'^$', 'users.views.index', name='users_index'),
     (r'^login/$', 'django.contrib.auth.views.login'),
     (r'^about/', include('emailCapture.urls')), # temporary email collector
     (r'^users/', include('users.urls')),

@@ -29,17 +29,13 @@ def user_login(request):
         if user.is_active:
             login(request, user)
             # Redirect to a success page.
-            return HttpResponseRedirect(reverse('login'))
+            return HttpResponseRedirect(reverse('users_index'))
         else:
             # Return a 'disabled account' error message
             return HttpResponse("Not active?")
     else:
         # Return an 'invalid login' error message.
         return HttpResponse("Hmnnn...no go!!")
-
-#def logged_in(request):
-#    logging.info('Got logged in!!')
-#    return HttpResponse("All Logged In!!")
 
 @login_required
 def user_page(request, username):
