@@ -107,7 +107,7 @@ class Expensify():
                 logging.info("No auth token returned")
             #return bodyJson
         except HTTPError, e:
-            print e.code, e.msg
-            print "HTTP error:", sys.exc_info()
+            logging.info("Unexpected HTTP response: %s, %s", e.code, e.msg)
+            logging.info("HTTP error: %s", sys.exc_info())
         except Exception, e:
-            print "Unexpected error:", sys.exc_info()
+            logging.info("Unexpected error: %s", sys.exc_info())
