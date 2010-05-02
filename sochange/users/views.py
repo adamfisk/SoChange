@@ -12,7 +12,7 @@ import logging
 @login_required
 def index(request):
     logging.info("Rendering index")
-    return render_to_response('users/home.html')
+    return render_to_response('users/home.html', context_instance=RequestContext(request))
 
 @login_required
 def user_page(request, username):
@@ -45,9 +45,9 @@ def user_profile(request, username):
 
 @login_required
 def profile(request):
-    return render_to_response('users/profile.html')
+    return render_to_response('users/profile.html', context_instance=RequestContext(request))
 
 @login_required
 def home(request):
-    return render_to_response('users/home.html')
+    return render_to_response('users/home.html', context_instance=RequestContext(request))
 
