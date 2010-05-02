@@ -9,14 +9,11 @@ from django.contrib.auth import authenticate, login
 
 import logging
 
+@login_required
 def index(request):
     logging.info("Rendering index")
-    return render_to_response('users/index.html', context_instance=RequestContext(request))
-    
-    
-@login_required
-def login_required_test(request):
-    return HttpResponse("@login_required seems to work!!")
+    return render_to_response('users/home.html')
+    #return render_to_response('users/index.html', context_instance=RequestContext(request))
 
 def user_login(request):
     logging.info('Got login!!')

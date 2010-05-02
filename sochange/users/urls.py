@@ -2,7 +2,8 @@ from django.conf.urls.defaults import *
 from django.views.generic.simple import direct_to_template
 
 urlpatterns = patterns('users.views',
-    (r'^$', direct_to_template, {'template': 'users/index.html'}),
+    #(r'^$', direct_to_template, {'template': 'users/index.html'}),
+    #(r'^$', direct_to_template, {'template': 'users/index.html'}),
     #url(r'^$', 'index', name='user_index'),
     url(r'^login/', 'user_login', name='login'),
     #(r'^login_required_test/', 'login_required_test'),

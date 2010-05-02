@@ -22,7 +22,7 @@ ACCOUNT_ACTIVATION_DAYS = 7 # variable required for registration app
 
 ADMIN_MEDIA_PREFIX = '/media/admin/'
 
-LOGIN_URL = '/login/'
+#LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/users/home/'
 
 
