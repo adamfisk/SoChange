@@ -5,9 +5,7 @@ from django.views.generic.simple import direct_to_template
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    #(r'^$', direct_to_template, {'template': 'index.html'}),
-    url(r'^$', 'users.views.index', name='users_index'),
-    #(r'^accounts/login/$', 'django.contrib.auth.views.login'),
+    url(r'^$', 'users.views.home', name='users_home'),
     (r'^about/', include('emailCapture.urls')), # temporary email collector
     (r'^users/', include('users.urls')),
     (r'^admin/', include(admin.site.urls)),

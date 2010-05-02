@@ -10,11 +10,6 @@ from django.contrib.auth import authenticate, login
 import logging
 
 @login_required
-def index(request):
-    logging.info("Rendering index")
-    return render_to_response('users/home.html', context_instance=RequestContext(request))
-
-@login_required
 def user_page(request, username):
     try:
        user = User.objects.get(username=username)
