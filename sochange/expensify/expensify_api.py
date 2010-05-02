@@ -95,9 +95,10 @@ class Expensify():
         try:
             filehandle = urllib2.urlopen(url)
             body = filehandle.read()
-            print body
+            logging.info("HTTP Response body: %s", body)
             bodyJson = simplejson.loads(body)
             if 'authToken' in bodyJson:
+                logging.info("Setting auth token")
                 tok = bodyJson['authToken']
                 if tok is not None and tok != "":
                     self.authToken = tok

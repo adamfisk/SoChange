@@ -23,9 +23,14 @@ class ApiTest(TestCase):
         partnerUserSecret = cfg.get("config", "partnerUserSecret")
         
         api = Expensify(partnerUserID, partnerUserSecret)
-        authJson = api.authenticate()
-        accountJson = api.createAccount('afisk@littleshoot.org')
         
+        logging.info("Authenticating")
+        authJson = api.authenticate()
+        
+        logging.info("Creating account")
+        accountJson = api.createAccount('michaelnorman22@gmail.com')
+        
+        logging.info("JSON: %s", accountJson)
         # This account should already exist, returning 300 
         self.failUnlessEqual(accountJson['jsonCode'], 300)
         
