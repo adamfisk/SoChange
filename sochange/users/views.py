@@ -13,26 +13,6 @@ import logging
 def index(request):
     logging.info("Rendering index")
     return render_to_response('users/home.html')
-    #return render_to_response('users/index.html', context_instance=RequestContext(request))
-
-def user_login(request):
-    logging.info('Got login!!')
-    #return HttpResponseRedirect(reverse('logged_in'))
-    username = request.POST['username']
-    password = request.POST['password']
-    logging.info("User:  %s", username)
-    user = authenticate(username=username, password=password)
-    if user is not None:
-        if user.is_active:
-            login(request, user)
-            # Redirect to a success page.
-            return HttpResponseRedirect(reverse('users_index'))
-        else:
-            # Return a 'disabled account' error message
-            return HttpResponse("Not active?")
-    else:
-        # Return an 'invalid login' error message.
-        return HttpResponse("Hmnnn...no go!!")
 
 @login_required
 def user_page(request, username):
@@ -48,6 +28,7 @@ def user_page(request, username):
     output = template.render(variables)
     return HttpResponse(output)
 
+@login_required
 def user_profile(request, username):
     try:
        user = User.objects.get(username=username)
@@ -61,10 +42,12 @@ def user_profile(request, username):
     output = template.render(variables)
     return HttpResponse(output)
 
- 
+
+@login_required
 def profile(request):
     return render_to_response('users/profile.html')
 
+@login_required
 def home(request):
     return render_to_response('users/home.html')
 

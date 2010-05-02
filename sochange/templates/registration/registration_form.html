@@ -6,5 +6,10 @@
   {{ form.as_p }}
   <input type="submit" value="register" />
 </form>
+
+    <div>
+	Already have an account? Please <a href="{% url django.contrib.auth.views.login %}">sign in</a>.
+    </div>
+
 {% endblock %}
 

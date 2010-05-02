@@ -20,6 +20,10 @@
       <input type="submit" value="login" />
 			<input type="hidden" name="next" value="{{ next }}" />
     </form>
+    
+    <div>
+	Not a SoChange user yet? Please <a href="{% url registration_register %}">register</a>.
+    </div>
 
 <script type="text/javascript">
 	document.getElementById('id_username').focus()
