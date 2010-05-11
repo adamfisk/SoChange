@@ -8,7 +8,7 @@
 			<img src="/images/logo.jpg" alt="Logo", style="display: inline-block; width: auto; height: 100px; align: center;" class="clear"></img>
 		</div>
 		<div class="ui-widget toolbox">
-                    {{ Mission.short_description }}
+                    {{ object.short_description }}
 		
 		</div>
 
@@ -41,7 +41,7 @@
 	</div>
 	<div class="column span-7">
 		<div class="page-content">
-			<h1>{{ Mission.name }}</h1>
+			<h1>{{ object.name }}</h1>
 			<div id="tabs">
 
 				<ul>
@@ -95,7 +95,7 @@
 					<fieldset>
 						<legend>Description</legend>
 						<div>
-                                                    {{ Mission.long_description }}
+                                                    {{ object.long_description }}
 						</div>
 					</fieldset>	
 				</div>

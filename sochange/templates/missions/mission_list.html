@@ -20,12 +20,10 @@
   <tr>
     <td style="padding: 5px;">{{ mission.name }}</td>
     <td>{{ mission.long_description }}</td>
-    <td>{{ mission.id }}</td>
     
-    <td>
-        {% url missions.show object_id=mission.id as show_url %}
-        <a href="/missions/{{ mission.id }}/">Show</a>
-    </td>
+    <td><a href="/missions/{{ mission.id }}/">Show</a></td>
+    <td><a href="/missions/edit/{{ mission.id }}/">Edit</a></td>
+    <td><a href="/missions/delete/{{ mission.id }}/">Delete</a></td>
     <!--
     <td><%= link_to 'Edit', edit_mission_path(mission) %></td>
     <td><%= link_to 'Destroy', mission, :confirm => 'Are you sure?', :method => :delete %></td>
