@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action="/missions/new/" method="post">{% csrf_token %}
+    {% include "missions/mission_form_snippet.html" %}
+    <p><input type="submit" value="Create Mission" /></p>
+</form>
+{% endblock %}
+

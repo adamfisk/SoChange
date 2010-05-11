@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Missions</h1>
+<!--
+<%= link_to 'New mission', new_mission_path %>
+-->
+<br/><br/>
+<table cellpadding="0" cellspacing="0">
+  <tr style="background-color: #eee; ">
+    <th class="ui-corner-left" style="width:300px; padding:5px;">Name</th>
+    <th style="width:300px;">Long description</th>
+	<th style="width:50px;">&nbsp;</th>
+	<th style="width:50px;">&nbsp;</th>
+	<th style="width:50px;" class="ui-corner-right">&nbsp;</th>
+  </tr>
+
+{% for mission in object_list %}
+  <tr>
+    <td style="padding: 5px;">{{ mission.name }}</td>
+    <td>{{ mission.long_description }}</td>
+    <td>{{ mission.id }}</td>
+    
+    <td>
+        {% url missions.show object_id=mission.id as show_url %}
+        <a href="/missions/{{ mission.id }}/">Show</a>
+    </td>
+    <!--
+    <td><%= link_to 'Edit', edit_mission_path(mission) %></td>
+    <td><%= link_to 'Destroy', mission, :confirm => 'Are you sure?', :method => :delete %></td>
+    -->
+  </tr>
+{% endfor %}
+</table>
+
+<br />
+
+
+
+<style>
+table tr td {
+	padding: 5px;
+}
+
+</style>
+{% endblock %}
+

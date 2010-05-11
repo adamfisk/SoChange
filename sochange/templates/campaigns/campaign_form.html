@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action="/campaign/new" method="post">
+    {% include "campaigns/campaign_form_snippet.html" %}
+    <p><input type="submit" value="Create Campaign" /></p>
+</form>
+{% endblock %}
+

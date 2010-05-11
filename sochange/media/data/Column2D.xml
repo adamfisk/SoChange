@@ -1,0 +1,9 @@
+<chart palette='2' caption='Campaign Impact' xAxisName='Month' yAxisName='Dollars Spent' showValues='1' decimals='1' formatNumberScale='0' useRoundEdges='1'>
+<set label='Jan' value='462' />
+<set label='Feb' value='857' />
+<set label='Mar' value='671' />
+<set label='Apr' value='494' />
+<set label='May' value='761' />
+<set label='Jun' value='960' />
+
+</chart>

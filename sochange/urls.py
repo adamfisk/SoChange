@@ -14,6 +14,6 @@ urlpatterns = patterns('',
     # Note the registration app uses django.contrib.auth.*, so "accounts/login/"
     # goes to "django.contrib.auth.views.login", for example.
     (r'^accounts/', include('registration.backends.default.urls')),
-    (r'^campaigns/', include('campaigns.urls')),
+    (r'^missions/', include('missions.urls')),
 
 )
