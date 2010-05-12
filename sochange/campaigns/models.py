@@ -17,6 +17,8 @@ class Campaign(models.Model):
 #    a user is assumed to be part of only one campaign.
 #    """
     name = models.CharField(max_length=50, unique=True)
+    short_description = models.TextField()
+    long_description = models.TextField()
 #    # logo = image
 #    shortDescription = models.TextField()
 #    longDescription = models.TextField() 
